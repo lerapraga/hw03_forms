@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
 from .models import Group, Post, User
-from .form import PostForm
+from .forms import PostForm
 
 
 def index(request):
@@ -20,7 +20,7 @@ def index(request):
     context = {
         "posts": posts,
         "text": text,
-        'page_obj': page_obj,
+        "page_obj": page_obj,
     }
     return render(request, template, context)
 
@@ -31,71 +31,62 @@ def group_posts(request, slug):
     template = "posts/group_list.html"
     text = "Здесь будет информация о группах проекта Yatube"
     posts = Post.objects.filter(group=group).order_by('-pub_date')[:10]
+    post_list = Post.objects.all()
+    paginator = Paginator(post_list, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     context = {
         "group": group,
         "posts": posts,
-        "text": text
+        "text": text,
+        "page_obj": page_obj,
     }
     return render(request, template, context)
 
 
 def profile(request, username):
-    # Здесь код запроса к модели и создание словаря контекста
-    context = {
-    }
-    return render(request, 'posts/profile.html', context)
+    user_author = get_object_or_404(User, username=username)
+    post_list = Post.objects.filter(author=user_author)
+    paginator = Paginator(post_list, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+    post_number = post_list.count()
+    context = {"post_list": post_list,
+               "page_obj": page_obj,
+               "post_number": post_number,
+               "author": user_author,
+               }
+    return render(request, "posts/profile.html", context)
 
 
 def post_detail(request, post_id):
-    # Здесь код запроса к модели и создание словаря контекста
+    post = get_object_or_404(Post, pk=post_id)
     context = {
+        'post': post,
     }
     return render(request, 'posts/post_detail.html', context)
 
 
 @login_required
 def post_create(request):
-    if request.method != "POST":
-        form = PostForm(request.POST)
-        return render(request, "new.html", {"form": form})
-    form = PostForm(request.POST)
-    if not form.is_valid():
-        return render(request, "new.html", {"form": form})
-    post = form.save(commit=False)
-    username = request.user.username
-    post.author = User.objects.get(username=username)
-    post.save()
-    return redirect("index")
+    form = PostForm(request.POST or None)
+    if form.is_valid():
+        post = form.save(commit=False)
+        post.author = request.user
+        form.save()
+        return redirect('posts:profile', request.user)
+    return render(request, 'posts/create_post.html', {'form': form})
 
 
 @login_required
-def post_edit(request, username, post_id):
-    post = get_object_or_404(Post, author__username=username, id=post_id)
-    if post.author != request.user:
-        return redirect(
-            'post',
-            post_id=post.id,
-            username=post.author.username
-        )
-    form = PostForm(
-        request.POST or None,
-        files=request.FILES or None,
-        instance=post
-    )
+def post_edit(request, post_id):
+    post = get_object_or_404(Post, pk=post_id)
+    if request.user != post.author:
+        return redirect('posts:post_detail', post.pk,)
+    form = PostForm(request.POST or None, instance=post)
     if form.is_valid():
-        form.save()
-        return redirect(
-            'post',
-            post_id=post.id,
-            username=post.author.username
-        )
-    return render(
-        request,
-        'posts/new.html',
-        {
-            'form': form,
-            'title': 'Редактировать запись',
-            'button': 'Сохранить запись',
-            'post': post
-        }
-    )
+        post.save()
+        return redirect('posts:post_detail', post.pk,)
+    is_edit = True
+    context = {'form': form, 'is_edit': is_edit}
+    return render(request, 'posts/create_post.html', context)
