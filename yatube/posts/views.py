@@ -13,14 +13,14 @@ def index(request):
     # Показывать по 10 записей на странице.
     post_list = Post.objects.all()
     paginator = Paginator(post_list, 10)
-    template = "posts/index.html"
-    text = "Это главная страница проекта Yatube"
+    template = 'posts/index.html'
+    text = 'Это главная страница проекта Yatube'
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     context = {
-        "posts": posts,
-        "text": text,
-        "page_obj": page_obj,
+        'posts': posts,
+        'text': text,
+        'page_obj': page_obj,
     }
     return render(request, template, context)
 
@@ -28,18 +28,18 @@ def index(request):
 def group_posts(request, slug):
     '''для страницы, на которой будут посты, отфильтрованные по группам.'''
     group = get_object_or_404(Group, slug=slug)
-    template = "posts/group_list.html"
-    text = "Здесь будет информация о группах проекта Yatube"
+    template = 'posts/group_list.html'
+    text = 'Здесь будет информация о группах проекта Yatube'
     posts = Post.objects.filter(group=group).order_by('-pub_date')[:10]
     post_list = Post.objects.all()
     paginator = Paginator(post_list, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     context = {
-        "group": group,
-        "posts": posts,
-        "text": text,
-        "page_obj": page_obj,
+        'group': group,
+        'posts': posts,
+        'text': text,
+        'page_obj': page_obj,
     }
     return render(request, template, context)
 
@@ -48,15 +48,15 @@ def profile(request, username):
     user_author = get_object_or_404(User, username=username)
     post_list = Post.objects.filter(author=user_author)
     paginator = Paginator(post_list, 10)
-    page_number = request.GET.get("page")
+    page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     post_number = post_list.count()
-    context = {"post_list": post_list,
-               "page_obj": page_obj,
-               "post_number": post_number,
-               "author": user_author,
+    context = {'post_list': post_list,
+               'page_obj': page_obj,
+               'post_number': post_number,
+               'author': user_author,
                }
-    return render(request, "posts/profile.html", context)
+    return render(request, 'posts/profile.html', context)
 
 
 def post_detail(request, post_id):

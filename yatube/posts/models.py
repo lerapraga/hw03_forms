@@ -24,7 +24,7 @@ class Post(models.Model):
         User,
         verbose_name='Автор',
         on_delete=models.CASCADE,
-        related_name="posts"
+        related_name='posts'
     )
     group = models.ForeignKey(
         Group,
@@ -32,7 +32,7 @@ class Post(models.Model):
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
-        related_name="posts"
+        related_name='posts'
     )
 
     class Meta:

@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import Group, Post
 
 
+@admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
     list_display = (
         'pk',
@@ -15,11 +16,6 @@ class PostAdmin(admin.ModelAdmin):
     search_fields = ('text',)
     list_filter = ('pub_date',)
     empty_value_display = '-пусто-'
-    # можно вынести эту строку в константу в settings.py
-    # - при доработке я это учту
 
 
-admin.site.register(Post, PostAdmin)
 admin.site.register(Group)
-
-# @admin.register использую в дальнейшем спасибо :)
